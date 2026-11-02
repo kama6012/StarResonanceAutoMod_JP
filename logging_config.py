@@ -2,13 +2,15 @@
 日志配置
 """
 
+from i18n import t, normalize_language
+
 import logging
 import os
 import sys
 from datetime import datetime
 
 
-def setup_logging(level=logging.INFO, debug_mode=False):
+def setup_logging(level=logging.INFO, debug_mode=False, lang: str = 'en'):
     """
     日志配置
     
@@ -58,8 +60,8 @@ def setup_logging(level=logging.INFO, debug_mode=False):
     
     # 记录日志配置信息
     logger = logging.getLogger(__name__)
-    logger.info(f"日志系统已初始化 - 级别: {logging.getLevelName(level)}")
-    logger.info(f"日志文件: {log_file}")
+    logger.info(t(lang, 'Logging initialized - level: {p0}', zh=f'日志系统已初始化 - 级别: {logging.getLevelName(level)}', p0=logging.getLevelName(level)))
+    logger.info(t(lang, 'Log file: {p0}', zh=f'日志文件: {log_file}', p0=log_file))
 
 
 def get_logger(name):
@@ -72,4 +74,4 @@ def get_logger(name):
     Returns:
         Logger实例
     """
-    return logging.getLogger(name) 
+    return logging.getLogger(name)

@@ -174,6 +174,46 @@ CATEGORY_CN_TO_EN: Dict[str, str] = {
 ATTR_CN_TO_EN: Dict[str, str] = {cn: MODULE_ATTR_NAMES_EN[attr_id] for attr_id, cn in MODULE_ATTR_NAMES.items()}
 ATTR_EN_TO_CN: Dict[str, str] = {v.lower(): k for k, v in ATTR_CN_TO_EN.items()}
 
+# Japanese display names; canonical Chinese keys stay stable for the native optimizer.
+MODULE_ATTR_NAMES_JA = dict(zip(MODULE_ATTR_NAMES, (
+    '筋力強化', '敏捷強化', '知力強化', '特殊攻撃', 'エリート打撃',
+    '特殊攻撃回復強化', '熟練回復強化', '詠唱集中', '攻撃速度集中',
+    '会心集中', '幸運集中', '魔法耐性', '物理耐性', '極・ダメージ蓄積',
+    '極・機敏な身のこなし', '極・生命凝縮', '極・応急処置', '極・生命波動',
+    '極・生命吸収', '極・チーム幸運会心', '極・絶境守護',
+)))
+MODULE_NAMES_JA = dict(zip(MODULE_NAMES, (
+    '基礎攻撃モジュール', '高性能攻撃モジュール', '卓越攻撃モジュール', '卓越攻撃モジュール・特選',
+    '基礎支援モジュール', '高性能支援モジュール', '卓越支援モジュール', '卓越支援モジュール・特選',
+    '基礎守護モジュール', '高性能守護モジュール', '卓越守護モジュール', '卓越守護モジュール・特選',
+)))
+CATEGORY_CN_TO_JA = dict(zip(CATEGORY_CN_TO_EN, ('攻撃', '守護', '支援', 'すべて')))
+CATEGORY_JA_TO_CN = {ja: cn for cn, ja in CATEGORY_CN_TO_JA.items()}
+CATEGORY_JA_TO_CN.update({'全て': '全部', '全部': '全部', '補助': '辅助'})
+ATTR_JA_TO_CN = {ja.lower(): MODULE_ATTR_NAMES[attr_id] for attr_id, ja in MODULE_ATTR_NAMES_JA.items()}
+
+
+def display_attr(name: str, lang: str = 'en') -> str:
+    canonical = normalize_attribute_name(name)
+    attr_id = MODULE_ATTR_IDS.get(canonical)
+    names = {'en': MODULE_ATTR_NAMES_EN, 'ja': MODULE_ATTR_NAMES_JA, 'zh': MODULE_ATTR_NAMES}
+    if attr_id is not None:
+        return names.get(lang, MODULE_ATTR_NAMES_EN)[attr_id]
+    # Unknown IDs are retained for diagnosing future protocol changes.
+    if name.startswith('未知属性('):
+        return name.replace('未知属性', '不明な属性' if lang == 'ja' else 'Unknown attribute') if lang != 'zh' else name
+    return name
+
+
+def display_module(config_id: int, fallback: str = '', lang: str = 'en') -> str:
+    names = {'en': MODULE_NAMES_EN, 'ja': MODULE_NAMES_JA, 'zh': MODULE_NAMES}
+    return names.get(lang, MODULE_NAMES_EN).get(config_id, fallback or f'Module ({config_id})')
+
+
+def display_category(category: str, lang: str = 'en') -> str:
+    names = {'en': CATEGORY_CN_TO_EN, 'ja': CATEGORY_CN_TO_JA}
+    return names.get(lang, {}).get(category, category)
+
 def normalize_attribute_name(name: str) -> str:
     """将英文/中文属性名归一化为中文；未知则原样返回"""
     if not name:
@@ -181,7 +221,7 @@ def normalize_attribute_name(name: str) -> str:
     if name in MODULE_ATTR_IDS:
         return name
     key = name.strip().lower()
-    return ATTR_EN_TO_CN.get(key, name)
+    return ATTR_JA_TO_CN.get(key, ATTR_EN_TO_CN.get(key, name))
 
 def normalize_attribute_list(names: List[str] | None) -> List[str] | None:
     if names is None:
@@ -195,7 +235,7 @@ def normalize_category(name: str) -> str:
     if name in CATEGORY_CN_TO_EN:
         return name
     key = name.strip().lower()
-    return CATEGORY_EN_TO_CN.get(key, ModuleCategory.ALL.value)
+    return CATEGORY_JA_TO_CN.get(key, CATEGORY_EN_TO_CN.get(key, ModuleCategory.ALL.value))
 
 def to_english_attr(name_cn: str) -> str:
     """中文属性名转英文显示名；未知则返回原文"""
@@ -323,4 +363,4 @@ class ModuleInfo:
     def __lt__(self, other):
         if not isinstance(other, ModuleInfo):
             return NotImplemented
-        return self.uuid < other.uuid 
+        return self.uuid < other.uuid

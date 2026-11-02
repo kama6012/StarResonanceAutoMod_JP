@@ -3,6 +3,8 @@
 用于获取和选择网络接口
 """
 
+from i18n import t, normalize_language
+
 import subprocess
 import socket
 import psutil
@@ -13,7 +15,7 @@ from logging_config import get_logger
 logger = get_logger(__name__)
 
 
-def get_network_interfaces() -> List[Dict]:
+def get_network_interfaces(lang: str = 'en') -> List[Dict]:
     """
     获取所有网络接口信息
     
@@ -57,12 +59,12 @@ def get_network_interfaces() -> List[Dict]:
                 interfaces.append(interface_info)
                 
     except Exception as e:
-        logger.error(f"获取网络接口失败: {e}")
+        logger.error(t(lang, 'Failed to get network interfaces: {p0}', zh=f'获取网络接口失败: {e}', p0=e))
         
     return interfaces
 
 
-def find_default_network_interface(interfaces: List[Dict]) -> Optional[int]:
+def find_default_network_interface(interfaces: List[Dict], lang: str = 'en') -> Optional[int]:
     """
     查找默认网络接口
     
@@ -97,7 +99,7 @@ def find_default_network_interface(interfaces: List[Dict]) -> Optional[int]:
                                         return i
                                         
     except Exception as e:
-        logger.debug(f"查找默认网络接口失败: {e}")
+        logger.debug(t(lang, 'Default interface detection failed: {p0}', zh=f'查找默认网络接口失败: {e}', p0=e))
         
     # 如果无法找到默认接口，尝试使用第一个活动的接口
     for i, interface in enumerate(interfaces):
@@ -107,28 +109,28 @@ def find_default_network_interface(interfaces: List[Dict]) -> Optional[int]:
     return None
 
 
-def display_network_interfaces(interfaces: List[Dict]) -> None:
+def display_network_interfaces(interfaces: List[Dict], lang: str = 'en') -> None:
     """
     显示网络接口列表
     
     Args:
         interfaces: 网络接口列表
     """
-    print("可用的网络接口:")
+    print(t(lang, 'Available Network Interfaces:', zh='可用的网络接口:'))
     for i, interface in enumerate(interfaces):
         name = interface['name']
         description = interface.get('description', name)
         is_up = "✓" if interface.get('is_up', False) else "✗"
         addresses = [addr['addr'] for addr in interface['addresses']]
-        addr_str = ", ".join(addresses) if addresses else "无IP地址"
+        addr_str = ", ".join(addresses) if addresses else t(lang, 'No IP addresses', zh='无IP地址')
         
-        print(f"  {i:2d}. {is_up} {description}")
-        print(f"      地址: {addr_str}")
-        print(f"      名称: {name}")
+        print(t(lang, '  {p0:2d}. {p1} {p2}', zh=None, p0=i, p1=is_up, p2=description))
+        print(t(lang, '      Addresses: {p0}', zh=f'      地址: {addr_str}', p0=addr_str))
+        print(t(lang, '      Name: {p0}', zh=f'      名称: {name}', p0=name))
         print()
 
 
-def select_network_interface(interfaces: List[Dict], auto_detect: bool = False) -> Optional[int]:
+def select_network_interface(interfaces: List[Dict], auto_detect: bool = False, lang: str = 'en') -> Optional[int]:
     """
     选择网络接口
     
@@ -140,45 +142,45 @@ def select_network_interface(interfaces: List[Dict], auto_detect: bool = False) 
         选择的接口索引
     """
     if not interfaces:
-        print("未找到可用的网络接口!")
+        print(t(lang, 'No available network interfaces found!', zh='未找到可用的网络接口!'))
         return None
         
     if auto_detect:
-        print("自动检测默认网络接口...")
-        default_index = find_default_network_interface(interfaces)
+        print(t(lang, 'Auto-detecting default network interface...', zh='自动检测默认网络接口...'))
+        default_index = find_default_network_interface(interfaces, lang=lang)
         if default_index is not None:
             interface = interfaces[default_index]
-            print(f"使用网络接口: {default_index} - {interface['description']}")
+            print(t(lang, 'Using network interface: {p0} - {p1}', zh=f"使用网络接口: {default_index} - {interface['description']}", p0=default_index, p1=interface['description']))
             return default_index
         else:
-            print("未找到默认网络接口!")
+            print(t(lang, 'Default network interface not found!', zh='未找到默认网络接口!'))
             
     # 显示接口列表
-    display_network_interfaces(interfaces)
+    display_network_interfaces(interfaces, lang=lang)
     
     # 交互式选择
     while True:
         try:
-            choice = input("请输入要使用的网络接口编号: ").strip()
+            choice = input(t(lang, 'Enter network interface number: ', zh='请输入要使用的网络接口编号: ')).strip()
             if not choice:
                 # 如果用户直接回车，尝试自动检测
-                print("自动检测默认网络接口...")
-                default_index = find_default_network_interface(interfaces)
+                print(t(lang, 'Auto-detecting default network interface...', zh='自动检测默认网络接口...'))
+                default_index = find_default_network_interface(interfaces, lang=lang)
                 if default_index is not None:
                     interface = interfaces[default_index]
-                    print(f"使用网络接口: {default_index} - {interface['description']}")
+                    print(t(lang, 'Using network interface: {p0} - {p1}', zh=f"使用网络接口: {default_index} - {interface['description']}", p0=default_index, p1=interface['description']))
                     return default_index
                 else:
-                    print("未找到默认网络接口!")
+                    print(t(lang, 'Default network interface not found!', zh='未找到默认网络接口!'))
                     continue
                     
             index = int(choice)
             if 0 <= index < len(interfaces):
                 return index
             else:
-                print(f"无效的接口编号: {index}")
+                print(t(lang, 'Invalid interface number: {p0}', zh=f'无效的接口编号: {index}', p0=index))
         except ValueError:
-            print("请输入有效的数字!")
+            print(t(lang, 'Please enter a valid number!', zh='请输入有效的数字!'))
         except KeyboardInterrupt:
-            print("\n用户取消选择")
+            print(t(lang, '\nSelection cancelled', zh='\n用户取消选择'))
             return None

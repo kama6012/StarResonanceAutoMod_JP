@@ -1,254 +1,270 @@
-# 星痕共鸣模组全自动筛选工具
+# Star Resonance Auto Module Filter
 
-[English Version](README_EN.md)
+[English](README.md) | [日本語](README_JA.md) | [中文](README_ZH.md)
 
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-brightgreen.svg)](https://www.gnu.org/licenses/agpl-3.0.txt)
+An intelligent module filtering tool for the game “Star Resonance”. It captures module data via network packets and computes optimal combinations using multi-strategy algorithms with a C++ core. English is the default output language. Japanese (`--lang ja`) and Chinese (`--lang zh`) are also supported, including attribute/category inputs.
 
-一款专为《星痕共鸣》游戏开发的星痕共鸣模组智能筛选工具，通过网络数据包分析自动获取游戏中的模组数据，并使用 C++优化的算法计算最优模组搭配方案。
 
-## 🌟 核心功能
+## Fork changes
 
-- **🔍 实时模组抓取**: 通过网络抓包实时获取游戏中的模组数据
-- **⚡ 智能筛选算法**: 基于 C++优化的多策略并行算法，快速计算最优搭配
-- **🎯 精准属性筛选**: 支持按属性词条、模组类型进行精确筛选
-- **📊 综合评分系统**: 为每个推荐搭配计算游戏中的战斗力评分
-- **🚀 自动化流程**: 一键启动，自动完成整个筛选过程
+- Reads current module values from `Item.ModPartLevel.Levels` (field 21), keyed by attribute ID. Absent/empty maps fall back to legacy `Mod.ModInfos.InitLinkNums`.
+- Skips unrelated inventory items and modules without usable values, and tolerates missing legacy metadata.
+- Defaults to English across CLI help, prompts and logs; adds Japanese names, inputs and output. Internal optimizer keys remain unchanged.
+- Japanese names are descriptive translations, not verified official game terminology. This schema update follows the referenced CN project; live packets from every regional server have not been verified.
 
-## 📦 两种使用方式
+Protocol reference: [upstream module update](https://github.com/fudiyangjin/resonance-logs-cn/commit/c7a1b73649c3fda73f10d3fdd946027f5d548050). Regeneration instructions are in [protocol/README.md](protocol/README.md).
 
-### 🎮 方式一：可执行文件（推荐普通用户）
+These changes are in source. The upstream release executables linked below do **not** contain this fork's changes. Build from source to use them.
 
-适合不熟悉编程的用户，开箱即用。
+```sh
+python star_railway_monitor.py --help
+python star_railway_monitor.py --lang ja --help
+python star_railway_monitor.py -a --lang ja -c 攻撃 -attr 筋力強化 会心集中 -mas 会心集中 8
+python star_railway_monitor.py --load-vdata --lang ja
+```
 
-#### 📋 系统要求
+When packaging with PyInstaller, include the Japanese catalog: `--add-data "locales/ja.json;locales"` on Windows (`:` instead of `;` on Linux/macOS). Keep the existing C++ extension and packet-capture dependencies in the build.
 
-**基础要求（CPU 版本和 GPU 版本都需要）：**
+Run regression tests with `python -m unittest discover -s tests -v`. Building the C++ extension enables the native integration test. CI builds the CPU extension on Windows and Linux before running tests.
 
-- Windows 10/11 (64 位)
-- 下载并安装 [Npcap](https://nmap.org/npcap/) 或 [WinPcap](https://www.winpcap.org/)（推荐 Npcap）
-- 《星痕共鸣》游戏客户端
+## 🌟 Core Features
 
-**GPU 版本额外要求：**
+- Real-time module capture via packet sniffing
+- Multi-strategy optimizer (C++ core; CUDA/OpenCL acceleration when available)
+- Precise filtering by attributes and module categories
+- Unified combat power scoring for each recommended combination
+- Automated workflow: one command to complete the full process
 
-- NVIDIA 显卡, 且驱动版本 ≥ 571.96（CUDA 路径）
-- AMD / Intel 显卡, 支持 OpenCL 的显卡驱动（应该没有不支持的, OPENCL 路径)
+## 📦 Two Ways to Use
 
-> ⚠️ **重要**: .exe 用户必须安装 Npcap 才能正常使用抓包功能！如果您之前使用过 dps 检测工具, 不需要安装
-> ⚠️ **重要**: 首先尝试 GPU 版本, 若不支持会自动转为 CPU 运算. 若 GPU 性能不如 CPU 可直接使用 CPU 版本
+### 🎮 Way 1: Executable (recommended for end users)
 
-#### 🔽 获取工具
+Suitable for non-developers, ready to use out of the box.
 
-**下载步骤：**
+#### 📋 System Requirements
 
-1. 从 [Release 页面](https://github.com/fudiyangjin/StarResonanceAutoMod/releases) 下载对应版本：
-   - `StarResonanceAutoMod_CPU.exe` - CPU 版本
-   - `StarResonanceAutoMod_CUDA.exe` - GPU 版本
-2. 将文件放置在任意文件夹中
+Basic (for both CPU and GPU versions):
 
-#### 🚀 快速开始
+- Windows 10/11 (64-bit)
+- Install Npcap or WinPcap (Npcap recommended)
+- Star Resonance game client
 
-**基础使用流程：**
+GPU-specific:
 
-1. 运行命令提示符(cmd, 终端)
-2. 导航到 exe 文件所在目录
-3. 执行基础命令：
+- NVIDIA GPU, driver version ≥ 571.96 (CUDA path)
+- AMD / Intel GPU with OpenCL-capable drivers (OpenCL path)
+
+> ⚠️ Important: .exe users must install Npcap to capture packets. If you've used DPS counter tools before, you may already have it installed.
+> ⚠️ Important: Try GPU version first; if unavailable it will fall back to CPU automatically. If GPU is slower, use CPU version directly.
+
+#### 🔽 Get the Tool
+
+1. Download from the [Release page](https://github.com/fudiyangjin/StarResonanceAutoMod/releases):
+   - `StarResonanceAutoMod_CPU.exe` – CPU version
+   - `StarResonanceAutoMod_CUDA.exe` – GPU version
+2. Place the file in any directory
+
+#### 🚀 Quick Start
+
+1. Open Command Prompt (cmd, Terminal)
+2. Navigate to the directory where the exe is located
+3. Run:
    ```bash
    .\StarResonanceAutoMod.exe -a
    ```
-4. 启动游戏，重新登录并选择角色
-5. 等待程序自动完成模组分析(程序会自动退出)
+4. Launch the game, relogin and select your character
+5. Wait for the program to finish analysis (it will exit automatically)
 
-#### 💡 常用命令示例
+#### 💡 Common Commands
 
 ```bash
-# 查看所有可用网络接口
+# List all network interfaces
 .\StarResonanceAutoMod.exe --list
 
-# 自动选择网络接口（推荐）
-.\StarResonanceAutoMod.exe -a
+# Auto-select network interface (recommended)
+.\StarResonanceAutoMod.exe -a -lang en
 
-# 筛选包含特定属性的模组, 携带的属性会优先筛选(推荐)
-.\StarResonanceAutoMod.exe -a -attr 智力加持 暴击专注 特攻伤害
+# Prefer modules that contain specified attributes (recommended)
+.\StarResonanceAutoMod.exe -a -attr "Intellect Boost" "Crit Focus" "Special Attack" -lang en
 
-# 排除不需要的属性, -exattr 后携带的属性筛选优先级会降低
-.\StarResonanceAutoMod.exe -a -attr 智力加持 暴击专注 -exattr 施法专注 攻速专注
+# Exclude attributes (excluded attributes get lower priority)
+.\StarResonanceAutoMod.exe -a -attr "Intellect Boost" "Crit Focus" -exattr "Cast Focus" "Attack SPD" -lang en
 
-# 要求包含多个指定属性(谨慎使用, 严格的筛选规则)
-.\StarResonanceAutoMod.exe -a -attr 智力加持 特攻伤害 暴击专注 -mc 2
+# Require multiple specified attributes (strict)
+.\StarResonanceAutoMod.exe -a -attr "Intellect Boost" "Special Attack" "Crit Focus" -mc 2 -lang en
 
-# 启用枚举模式直接运算
-.\StarResonanceAutoMod.exe -a -enum
+# Enable enumeration mode
+.\StarResonanceAutoMod.exe -a -enum -lang en
 
-# 启用枚举模式+指定携带属性(推荐, 可以得到指定属性更全的组合)
-.\StarResonanceAutoMod.exe -a -enum -attr 智力加持 暴击专注 特攻伤害
+# Enumeration + target attributes (recommended)
+.\StarResonanceAutoMod.exe -a -enum -attr "Intellect Boost" "Crit Focus" "Special Attack" -lang en
 
-# 启用 5 模组计算
-.\StarResonanceAutoMod.exe -a -cs 5
+# Enable 5-module computation
+.\StarResonanceAutoMod.exe -a -cs 5 -lang en
 
-# 启用 5 模组计算并指定优先属性
-.\StarResonanceAutoMod.exe -a -cs 5 -attr 智力加持 暴击专注 特攻伤害
+# Enable 5-module with preferred attributes
+.\StarResonanceAutoMod.exe -a -cs 5 -attr "Intellect Boost" "Crit Focus" "Special Attack" -lang en
 
-# 启用 5 模组计算并筛选最终组合
-.\StarResonanceAutoMod.exe -a -cs 5 -mas 特攻伤害 20 -mas 智力加持 16
+# Enable 5-module with final combination filter
+.\StarResonanceAutoMod.exe -a -cs 5 -mas "Special Attack" 20 -mas "Intellect Boost" 16 -lang en
 
-# 最终属性值筛选, 和枚举模式并用, 最终组合特攻伤害 >= 20, 智力加持 >= 16
-.\StarResonanceAutoMod.exe -a -enum -attr 智力加持 暴击专注 特攻伤害 -mas 特攻伤害 20 -mas 智力加持 16
+# Enforce final attribute sums with enumeration
+.\StarResonanceAutoMod.exe -a -enum -attr "Intellect Boost" "Crit Focus" "Special Attack" -mas "Special Attack" 20 -mas "Intellect Boost" 16 -lang en
 
-# 启用调试模式查看详细信息
-.\StarResonanceAutoMod.exe -a --debug
+# Enable debug mode for detailed logs in English
+.\StarResonanceAutoMod.exe -a --debug -lang en
 ```
 
-#### 🗂️ 离线直接计算
+#### 🗂️ Offline Run (No Re-capture Needed)
 
-程序在抓包解析到模组数据后，会自动在可执行文件目录生成并覆盖保存 `modules.vdata`（始终保留最新一份）。
+Once modules are captured, the program automatically saves and overwrites `modules.vdata` in the exe directory (always keeping the latest one).
 
-无需再次抓包与重新登录角色，直接使用最新的离线数据进行计算：
+To compute directly from the latest offline data without recapturing or relogging:
 
 ```bash
-.\StarResonanceAutoMod.exe -enum -lv
+.\StarResonanceAutoMod.exe -enum -lv -lang en
 ```
 
-如果要直接进行 5 模组离线计算：
+For 5-module offline computation:
 
 ```bash
-.\StarResonanceAutoMod.exe -lv -cs 5
+.\StarResonanceAutoMod.exe -lv -cs 5 -lang en
 ```
 
-## ⚡ 枚举模式性能参考
+## ⚡ Enumeration Mode Performance Reference
 
-### 🖥️ 测试环境
+### 🖥️ Test Environments
 
-**CPU 版本测试环境：**
+CPU version:
 
-- **CPU**: AMD Ryzen 9 5900X 12-Core Processor (3.70 GHz)
-- **内存**: 32GB DDR4
-- **系统**: Windows 10/11
+- CPU: AMD Ryzen 9 5900X 12-Core Processor (3.70 GHz)
+- Memory: 32GB DDR4
+- OS: Windows 10/11
 
-**GPU 版本测试环境：**
+GPU version:
 
-- **GPU**: NVIDIA RTX 3090 (Compute Capability 8.6, 82 SM)
-- **显存**: 24GB GDDR6X
-- **系统**: Windows 10/11
+- GPU: NVIDIA RTX 3090 (Compute Capability 8.6, 82 SM)
+- VRAM: 24GB GDDR6X
+- OS: Windows 10/11
 
-### 📊 性能测试结果
+### 📊 Performance Results
 
-| 模组数量 | 组合总数       | CPU 版本耗时 | CPU 每秒处理 | CUDA 版本耗时 | CUDA 每秒处理 | CUDA 提升 | OpenCL 版本耗时 | OpenCL 每秒处理 | OpenCL 提升 |
-| -------- | -------------- | ------------ | ------------ | ------------- | ------------- | --------- | ---------------- | ---------------- | ----------- |
-| 500      | 2,573,031,125  | 6.8124s      | ~377.7M      | 0.2756s       | ~9336.1M      | 24.72x    | 3.6628s          | ~702.5M          | 3.72x       |
-| 600      | 5,346,164,850  | 14.3606s     | ~372.3M      | 0.5258s       | ~10167.7M     | 27.31x    | 7.3117s          | ~731.5M          | 3.74x       |
-| 700      | 9,918,641,075  | 26.4913s     | ~374.4M      | 1.0677s       | ~9289.7M      | 24.81x    | 13.0472s         | ~760.3M          | 3.85x       |
-| 800      | 16,938,959,800 | 43.7750s     | ~387.0M      | 1.4090s       | ~12022.0M     | 31.07x    | 22.3830s         | ~757.0M          | 3.90x       |
-| 900      | 27,155,621,025 | -            | -            | 2.5902s       | ~10484.0M     | -         | 37.3179s         | ~727.9M          | 3.75x       |
-| 1000     | 41,417,124,375 | -            | -            | 3.6148s       | ~11457.7M     | -         | 57.2074s         | ~723.9M          | 3.73x       |
+| Modules | Combinations     | CPU Time  | CPU/s      | CUDA Time | CUDA/s     | CUDA Gain | OpenCL Time | OpenCL/s   | OpenCL Gain |
+| ------- | ---------------- | --------- | ---------- | --------- | ---------- | --------- | ----------- | ---------- | ----------- |
+| 500     | 2,573,031,125    | 6.8124s   | ~377.7M    | 0.2756s   | ~9336.1M   | 24.72x    | 3.6628s     | ~702.5M    | 3.72x       |
+| 600     | 5,346,164,850    | 14.3606s  | ~372.3M    | 0.5258s   | ~10167.7M  | 27.31x    | 7.3117s     | ~731.5M    | 3.74x       |
+| 700     | 9,918,641,075    | 26.4913s  | ~374.4M    | 1.0677s   | ~9289.7M   | 24.81x    | 13.0472s    | ~760.3M    | 3.85x       |
+| 800     | 16,938,959,800   | 43.7750s  | ~387.0M    | 1.4090s   | ~12022.0M  | 31.07x    | 22.3830s    | ~757.0M    | 3.90x       |
+| 900     | 27,155,621,025   | -         | -          | 2.5902s   | ~10484.0M  | -         | 37.3179s    | ~727.9M    | 3.75x       |
+| 1000    | 41,417,124,375   | -         | -          | 3.6148s   | ~11457.7M  | -         | 57.2074s    | ~723.9M    | 3.73x       |
 
-> 📝 **说明**:
+> **Note:**
 >
-> - 本次已更新 CPU 与 CUDA 测试结果
-> - OpenCL 列保留为历史测试记录，本次未重新复测，也未按本次 CPU 数据重新计算
-> - 900 / 1000 模组当前仅补充了 CUDA 主路径（Dense LUT）测试数据，因此 CPU 与提升倍数暂未填写
+> - CPU and CUDA test results have been updated
+> - OpenCL column retained as historical data; not re-tested in this round
+> - 900/1000 modules: only CUDA main path (Dense LUT) data added; CPU and gain factor left blank
 
-### 🧩 5 模组 CUDA 测试记录
+### 🚀 Performance Tips
 
-5 模组模式通过 `--combination-size 5` 或 `-cs 5` 启用。该模式下若 CUDA 可用，程序会启用 **并行策略枚举 + beam search**；`-enum` 在 5 模组模式下会自动禁用并回退到常规优化流程。
+1. Close the game during enumeration to free CPU/GPU resources
+2. Avoid other heavy workloads when running the optimizer
+3. Choose a reasonable number of modules to avoid excessive computation
 
-| 模组数量 | 组合总数         | CUDA 主路径耗时 |
-| -------- | ---------------- | --------------- |
-| 500      | 255,244,687,600  | 24.3293s        |
-| 600      | 637,262,850,120  | 59.6303s        |
+### 🧩 5-Module CUDA Test Results
 
-> 📝 **说明**: 5 模组的组合空间远高于 4 模组
+5-module mode is enabled via `--combination-size 5` or `-cs 5`. When CUDA is available, the program uses **parallel strategy enumeration + beam search**; `-enum` is automatically disabled and falls back to regular optimization in 5-module mode.
 
-### 🚀 性能优化建议
+| Modules | Combinations      | CUDA Time  |
+| ------- | ----------------- | ---------- |
+| 500     | 255,244,687,600   | 24.3293s   |
+| 600     | 637,262,850,120   | 59.6303s   |
 
-1. **关闭游戏**: 枚举模式运行时建议退出游戏，释放 CPU, GPU 资源
-2. **避免其他重负载程序**: 确保 CPU, GPU 专注于模组计算
-3. **合理选择模组数量**: 根据实际需求选择筛选范围，避免过度计算
+> **Note:** 5-module combination space is much larger than 4-module.
 
-> ⚠️ **枚举模式限制**: 枚举模式最多支持 800 个模组的运算，如果模组数量超过 800 个，程序会自动筛选至 800 个进行计算(GPU 模式为 1000)
+> ⚠️ Enumeration Limit: Up to 800 modules in CPU/OpenCL mode and 1000 in CUDA; if exceeded, prefiltering will reduce to the limit automatically.
 
-#### 📝 命令参数说明
+## 📝 CLI Options
 
-| 参数                   | 短参数    | 类型   | 说明                                        | 可选值/示例                                 |
-| ---------------------- | --------- | ------ | ------------------------------------------- | ------------------------------------------- |
-| `--list`               | `-l`      | 开关   | 列出所有网络接口                            | `-l`                                        |
-| `--auto`               | `-a`      | 开关   | 自动选择网络接口(推荐)                      | `-a`                                        |
-| `--interface`          | `-i`      | 整数   | 手动指定网络接口索引                        | `-i 2`                                      |
-| `--category`           | `-c`      | 字符串 | 筛选模组类型                                | `攻击` / `守护` / `辅助` / `全部`(默认全部) |
-| `--attributes`         | `-attr`   | 多值   | 指定要包含的属性词条, 优先筛选              | `-attr 智力加持 暴击专注`                   |
-| `--exclude-attributes` | `-exattr` | 多值   | 指定要排除的属性词条, 筛选优先级变低        | `-exattr 施法专注`                          |
-| `--match-count`        | `-mc`     | 整数   | 模组需包含的指定属性数量                    | `-mc 2` (默认:1)                            |
-| `--combination-size`   | `-cs`     | 整数   | 组合模组数量, 可选 `4` 或 `5`               | `-cs 5`                                     |
-| `--enumeration-mode`   | `-enum`   | 开关   | 启用枚举模式直接运算(推荐和 -attr 一起使用, 仅 4 模组有效) | `-enum`                        |
-| `--debug`              | `-d`      | 开关   | 启用调试模式输出详细日志                    | `-d`                                        |
-| `--min-attr-sum`     | `-mas`    | 多值   | 指定求解后包含的属性词条总和的最小值        | `-mas 智力加持 20 -mas 暴击专注 20`         |
-| `--load-vdata`         | `-lv`     | 开关   | 从 exe 目录读取 `modules.vdata` 离线直接运算 | `-lv`                                       |
+| Option                  | Short    | Type    | Description                                                          | Examples |
+| ----------------------- | -------- | ------- | -------------------------------------------------------------------- | -------- |
+| `--list`                | `-l`     | flag    | List all network interfaces                                          | `-l`     |
+| `--auto`                | `-a`     | flag    | Auto select network interface (recommended)                          | `-a`     |
+| `--interface`           | `-i`     | int     | Use the specified interface index                                    | `-i 2`   |
+| `--category`            | `-c`     | string  | Module category                                                      | `attack` / `guardian` / `support` / `all` (default: all)|
+| `--attributes`          | `-attr`  | multi   | Include attributes (prioritized)                                     | `-attr "Intellect Boost" "Crit Focus"` |
+| `--exclude-attributes`  | `-exattr`| multi   | Exclude attributes (lower priority)                                  | `-exattr "Cast Focus"` |
+| `--match-count`         | `-mc`    | int     | Number of required target attributes                                 | `-mc 2` (default: 1) |
+| `--combination-size`    | `-cs`    | int     | Number of modules per combination, `4` or `5`                        | `-cs 5` |
+| `--enumeration-mode`    | `-enum`  | flag    | Enable enumeration mode (recommended with -attr, 4-module only)      | `-enum` |
+| `--debug`               | `-d`     | flag    | Enable debug logs                                                    | `-d` |
+| `--min-attr-sum`        | `-mas`   | multi   | Min total value for an attribute in final 4-piece set                | `-mas "Crit Focus" 8 -mas "Intellect Boost" 16` |
+| `--lang`                | `-lang`  | string  | Output language, `zh` or `en` (default: `zh`)                        | `-lang en` |
+| `--load-vdata`          | `-lv`    | flag    | Load `modules.vdata` from exe dir and compute offline                | `-lv` |
 
-#### ⚠️ 使用注意事项
+#### ⚠️ Notes
 
-1. **先安装 Npcap**: 如果没有安装 Npcap，程序无法进行网络抓包
-2. **网络接口选择**: 建议优先使用 `-a` 参数自动选择网络接口
-3. **使用枚举模式**: 开启枚举模式计算开始后最好退出游戏保证 CPU 的利用率
-4. **枚举模式限制**: 枚举模式最多支持 800 个模组的运算，超过后会自动筛选至 800 个(GPU 模式为 1000)
-5. **5 模组说明**: 使用 `-cs 5` 可切换到 5 模组计算；若 CUDA 可用会启用并行策略枚举+beam search，若不可用则仅执行 beam search
-6. **5 模组与枚举模式**: 5 模组下 `-enum` 会自动禁用并回退到常规优化模式
-7. **`-attr` 参数选择**: `-attr`, `-exattr` , `-mas` 后跟的参数必须在文档最后 **支持的属性词条** 中
+1. Install Npcap first; otherwise packet capture will not work
+2. Prefer `-a` to auto-select the network interface
+3. For best CPU utilization during enumeration, exit the game while computing
+4. Enumeration mode supports up to 800 (CPU/OpenCL) or 1000 (CUDA) modules; if exceeded, auto-prefilter to the limit
+5. **5-module mode**: Use `-cs 5` for 5-module computation; with CUDA, enables parallel strategy enumeration + beam search; without CUDA, beam search only
+6. **5-module and enumeration**: In 5-module mode, `-enum` is automatically disabled and falls back to regular optimization
+7. `-attr`, `-exattr`, `-mas` require supported attribute names (see below)
 
 ---
 
-### 💻 方式二：源码运行（开发者）
+### 💻 Way 2: Run from Source (for developers)
 
-适合开发者或需要自定义功能的高级用户。
+Suitable for developers or advanced users who need customization.
 
-#### 🛠️ 开发环境要求
+#### 🛠️ Development Requirements
 
-**基础要求（CPU 版本和 GPU 版本都需要）：**
+Basic (for both CPU and GPU):
 
-- Python 3.8+ (推荐 3.10+) ⚠️
-- **Visual Studio Build Tools 2019/2022** 或 Visual Studio
+- Python 3.10+
+- Visual Studio Build Tools 2019/2022 or Visual Studio
 - Git
 - Windows SDK
 
-**GPU 版本额外要求：**
+GPU-specific:
 
-- **CUDA Toolkit 12.8**（CUDA 路径）
-- **OpenCL SDK/CUDA Toolkit** (OpenCL 路径)
-- 支持 CUDA 的 NVIDIA 显卡（RTX 20XX 及以上）
+- CUDA Toolkit 12.8 (for CUDA path)
+- OpenCL SDK/CUDA Toolkit (for OpenCL path)
+- NVIDIA GPU supporting CUDA (RTX 20XX or later)
 
-> ⚠️ **编译器一致性问题**:
+> ⚠️ Compiler Consistency:
 >
-> - **CPython**: 从 python.org 下载的 Python 解释器，用 MSVC 编译
-> - **C++扩展**: 必须用相同版本的 MSVC 编译，否则会出现：
->   - Segmentation Fault (段错误)
->   - 默认参数调用失败
->   - 内存访问异常
-> - **绝对不能混用**: MSVC 编译的 Python + MinGW 编译的扩展 = 💥 崩溃
+> - CPython: Python from python.org is built with MSVC
+> - C++ extensions: must be built with the same MSVC version
+> - Otherwise you may encounter segmentation faults, default argument call failures, memory access violations
+> - Never mix MSVC-built Python with MinGW-built extensions
 
-#### 📥 环境搭建
+#### 📥 Setup
 
-**1. 克隆项目**
+1) Clone the project
 
 ```bash
-git clone https://github.com/fudiyangjin/StarResonanceAutoMod.git
+git clone https://github.com/kama6012/StarResonanceAutoMod.git
 cd StarResonanceAutoMod
 ```
 
-**2. 安装依赖**
+2) Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-> 📝 **依赖说明**:
+> Dependencies:
 >
-> - `scapy>=2.5.0`: 网络抓包库
-> - `zstandard>=0.21.0`: 数据压缩库
-> - `protobuf>=4.21.0`: 协议缓冲区库
-> - `pybind11>=2.10.0`: C++扩展绑定库
-> - `cpp_extension/third_party/cccl-3.3.0/`: cccl 需要 >= 3.3
+> - `scapy>=2.5.0`: packet capture
+> - `zstandard>=0.21.0`: compression
+> - `protobuf>=6.31.1,<7`: protocol buffers
+> - `pybind11>=2.10.0`: C++ binding
+> - `cpp_extension/third_party/cccl-3.3.0/`: cccl >= 3.3
 
-**3. 编译 C++扩展**
+3) Build C++ extensions
 
-**CPU 版本编译：**
+CPU build:
 
 ```bash
 cd cpp_extension
@@ -256,7 +272,7 @@ python setup.py build_ext --inplace
 cd ..
 ```
 
-**GPU 版本编译：**
+GPU build:
 
 ```bash
 cd cpp_extension
@@ -264,106 +280,104 @@ python setup.py build_ext --inplace
 cd ..
 ```
 
-> 📝 **GPU 版本编译说明**:
+> GPU Build Notes:
 >
-> - 编译脚本会自动检测 CUDA 环境
-> - 如果检测到 CUDA，会自动编译 GPU 加速版本
-> - 如果 CUDA 编译失败，会自动回退到 CPU 版本
-> - `cpp_extension/third_party/` 目录中已包含当前编译需要的附加头文件依赖
-> - 支持的显卡架构：GTX 1000 系列、RTX 2000/3000/4000/5000 系列
+> - The build script auto-detects CUDA
+> - If CUDA is detected, the GPU-accelerated version is built
+> - If CUDA build fails, it falls back to CPU
+> - `cpp_extension/third_party/` contains additional header dependencies for compilation
+> - Supported GPU families: GTX 1000, RTX 2000/3000/4000/5000 series
 
-#### 🚀 运行程序
+#### 🚀 Run
 
 ```bash
-# 基础运行
+# Basic run
 python star_railway_monitor.py -a
 
-# 带参数运行
-python star_railway_monitor.py -a -attr 智力加持 暴击专注 -d
+# With parameters (English mode)
+python star_railway_monitor.py -a -attr "Intellect Boost" "Crit Focus" -d -lang en
 
-# 查看所有参数
+# Show help
 python star_railway_monitor.py --help
-
 ```
 
-#### 🔧 开发者功能
+#### 🔧 Developer Features
 
-**日志系统**
+Logging:
 
-- 日志文件位于 `logs/` 目录
-- 支持调试模式：`python star_railway_monitor.py -d`
+- Logs under `logs/`
+- Debug mode: `python star_railway_monitor.py -d`
 
-**C++性能优化**
+C++ Optimization:
 
-- 核心算法使用 C++实现
-- 源码位于 `cpp_extension/src/`
-- 支持 CUDA GPU 加速
-- 支持 OpenCL GPU 加速
+- Core algorithms implemented in C++
+- Source under `cpp_extension/src/`
+- CUDA GPU acceleration
+- OpenCL GPU acceleration
 
-**GPU 加速功能**
+GPU Acceleration Behavior:
 
-- 自动检测 CUDA 环境
-- 支持多种 NVIDIA 显卡架构
-- 编译时自动优化 GPU 代码
-- 支持 OpenCL（AMD/Intel），自动检测平台与设备
-- 优先 CUDA，其次 OpenCL，均不可用则回退 CPU
-- 运行时自动回退到 CPU 计算（当 GPU 不可用或初始化失败时）
+- Auto-detect CUDA environment
+- Prefer CUDA, then OpenCL; fall back to CPU if neither available
+- Runtime fallback to CPU if GPU unavailable or initialization fails
 
-#### 📁 项目结构
+#### 📁 Project Structure
 
-```
+```text
 StarResonanceAutoMod/
-├── star_railway_monitor.py    # 主程序入口
-├── module_parser.py           # 模组数据解析器
-├── module_optimizer.py        # 模组优化算法
-├── module_types.py           # 数据类型定义
-├── packet_capture.py         # 网络抓包模块
-├── network_interface_util.py # 网络接口工具
-├── logging_config.py         # 日志配置
-├── BlueProtobuf_pb2.py       # 协议buffer定义
-├── requirements.txt          # Python依赖
-├── cpp_extension/            # C++性能扩展
-│   ├── setup.py             # 编译脚本
-│   ├── third_party/         # CUDA 编译附加依赖（含 CCCL 头文件）
-│   └── src/                 # C++源码
-│       ├── module_optimizer.cpp      # CPU优化算法
-│       ├── module_optimizer_cuda.cu  # CUDA GPU加速算法
-|       |── module_optimizer_opencl.cpp # OpenCL GPU加速算法
-│       └── pybind11_wrapper.cpp      # Python绑定
-├── logs/                    # 日志文件目录
-└── README.md                # 说明文档
+├── star_railway_monitor.py    # Entry point
+├── module_parser.py           # Module data parser
+├── module_optimizer.py        # Module optimizer
+├── module_types.py            # Data types and mappings
+├── packet_capture.py          # Packet capture
+├── network_interface_util.py  # Network interface utilities
+├── logging_config.py          # Logging setup
+├── BlueProtobuf_pb2.py        # Protobuf definitions
+├── requirements.txt           # Python dependencies
+├── cpp_extension/             # C++ performance extensions
+│   ├── setup.py               # Build script
+│   ├── third_party/           # CUDA build dependencies (including CCCL headers)
+│   └── src/                   # C++ sources
+│       ├── module_optimizer.cpp       # CPU optimizer
+│       ├── module_optimizer_cuda.cu   # CUDA GPU optimizer
+│       ├── module_optimizer_opencl.cpp# OpenCL GPU optimizer
+│       └── pybind11_wrapper.cpp       # Python bindings
+├── logs/                      # Logs
+└── README.md                  # Docs (English); README_JA.md / README_ZH.md
 ```
 
 ---
 
-## 🎯 支持的属性词条
+## 🎯 Supported Attributes
 
-### 基础属性
+### Basic
 
-- 力量加持、敏捷加持、智力加持
-- 特攻伤害、精英打击
-- 特攻治疗加持、专精治疗加持
-- 施法专注、攻速专注、暴击专注、幸运专注
-- 抵御魔法、抵御物理
+- Strength Boost, Intellect Boost, Agility Boost
+- Special Attack, Elite Strike
+- Healing Boost, Healing Enhance
+- Cast Focus, Attack SPD, Crit Focus, Luck Focus
+- Resistance, Armor
 
-### 特殊属性
+### Special
 
-- 极-绝境守护、极-伤害叠加、极-灵活身法
-- 极-生命凝聚、极-急救措施、极-生命波动
-- 极-生命汲取、极-全队幸暴
+- Final Protection, DMG Stack, Agile
+- Life Condense, First Aid, Life Wave
+- Life Steal, Team Luck&Crit
 
-## 🛠️ 问题排查
+> Internally, attributes are mapped to Chinese canonical names for stable calculation. English inputs are accepted and normalized.
 
-### 获取帮助
+## 🛠️ Troubleshooting
 
-- 查看详细日志：使用 `--debug` 参数
-- 提交 Issue：[GitHub Issues](https://github.com/fudiyangjin/StarResonanceAutoMod/issues)
-- 查看日志文件：`logs/` 目录下的最新日志
+### Get Help
 
-## 🙏 鸣谢
+- Use `--debug` for detailed logs
+- Submit issues: GitHub Issues
+- Check latest logs under `logs/`
 
-本项目关键数据抓取与分析部分基于 [StarResonanceDamageCounter](https://github.com/dmlgzs/StarResonanceDamageCounter) 项目移植而来，感谢原作者对于本项目的帮助。
+## 🙏 Acknowledgements
 
-## ⚖️ 免责声明
+Core packet parsing and analysis were adapted from StarResonanceDamageCounter. Thanks to the original author.
 
-本工具仅用于游戏数据分析学习目的，不得用于任何违反游戏服务条款的行为。使用者需自行承担相关风险。项目开发者不对任何使用本工具产生的后果负责。请在使用前确保遵守游戏社区的相关规定和道德标准。
+## ⚖️ Disclaimer
+
+This tool is for analysis and learning purposes only. Do not use it in ways that violate the game’s Terms of Service. Users assume all risks. The developers are not responsible for any consequences arising from the use of this tool. Please comply with community rules and ethical standards.

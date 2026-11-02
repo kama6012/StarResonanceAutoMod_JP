@@ -2,6 +2,8 @@
 网络抓包模块
 """
 
+from i18n import t, normalize_language
+
 import io
 import socket
 import struct
@@ -68,7 +70,7 @@ class BinaryReader:
 class PacketCapture:
     """网络数据包抓取器"""
     
-    def __init__(self, interface: str = None):
+    def __init__(self, interface: str = None, lang: str = 'en'):
         """
         初始化抓包器
         
@@ -76,6 +78,7 @@ class PacketCapture:
             interface: 网络接口名称, None表示自动选择
         """
         self.interface = interface
+        self.lang = normalize_language(lang)
         self.is_running = False
         self.callback = None
         self.packet_count = 0
@@ -88,7 +91,7 @@ class PacketCapture:
         self.tcp_lock = threading.Lock()
         self._data = b''
 
-        self.module_parser = ModuleParser()
+        self.module_parser = ModuleParser(lang=self.lang)
         
     def start_capture(self, callback: Callable[[Dict[str, Any]], None] = None):
         """
@@ -100,7 +103,7 @@ class PacketCapture:
         self.callback = callback
         self.is_running = True
         
-        logger.info(f"开始抓包，接口: {self.interface or '自动'}")
+        logger.info(t(self.lang, 'Starting capture, interface: {p0}', zh=f"开始抓包，接口: {self.interface or '自动'}", p0=self.interface or t(self.lang, 'Auto', zh='自动')))
         
         # 在新线程中运行抓包
         capture_thread = threading.Thread(target=self._capture_loop)
@@ -115,7 +118,7 @@ class PacketCapture:
     def stop_capture(self):
         """停止抓包"""
         self.is_running = False
-        logger.info("停止抓包")
+        logger.info(t(self.lang, 'Capture stopped', zh='停止抓包'))
         
     def _capture_loop(self):
         """抓包主循环"""
@@ -128,7 +131,7 @@ class PacketCapture:
                 stop_filter=lambda _: not self.is_running
             )
         except Exception as e:
-            logger.error(f"抓包过程中发生错误: {e}")
+            logger.error(t(self.lang, 'Capture failed: {p0}', zh=f'抓包过程中发生错误: {e}', p0=e))
             
     def _process_packet(self, packet):
         """处理单个数据包"""
@@ -142,7 +145,7 @@ class PacketCapture:
             if TCP in packet and IP in packet:
                 self._process_tcp_packet(packet)
         except Exception as e:
-            logger.debug(f"处理数据包时发生错误: {e}")
+            logger.debug(t(self.lang, 'Packet processing failed: {p0}', zh=f'处理数据包时发生错误: {e}', p0=e))
             
     def _process_tcp_packet(self, packet):
         """处理TCP数据包"""
@@ -174,7 +177,7 @@ class PacketCapture:
                     self.current_server = src_server
                     self._clear_tcp_cache()
                     self.tcp_next_seq = seq + len(payload)
-                    logger.info(f'识别到游戏服务器: {src_server}')
+                    logger.info(t(self.lang, 'Game server detected: {p0}', zh=f'识别到游戏服务器: {src_server}', p0=src_server))
                 else:
                     return  # 不是游戏服务器，跳过
             
@@ -184,7 +187,7 @@ class PacketCapture:
                 
             # TCP流重组逻辑
             if self.tcp_next_seq == -1:
-                logger.error('TCP流重组错误: tcp_next_seq 为 -1')
+                logger.error(t(self.lang, 'TCP reassembly failed: tcp_next_seq is -1', zh='TCP流重组错误: tcp_next_seq 为 -1'))
                 if len(payload) > 4 and struct.unpack('>I', payload[:4])[0] < 0x0fffff:
                     self.tcp_next_seq = seq
                 return
@@ -240,7 +243,7 @@ class PacketCapture:
                     return True
                     
         except Exception as e:
-            logger.debug(f"服务器识别失败: {e}")
+            logger.debug(t(self.lang, 'Server detection failed: {p0}', zh=f'服务器识别失败: {e}', p0=e))
             
         return False
         
@@ -261,7 +264,7 @@ class PacketCapture:
                     break
                     
                 if packet_size > 0x0fffff:
-                    logger.error(f"无效的数据包长度: {packet_size}")
+                    logger.error(t(self.lang, 'Invalid packet length: {p0}', zh=f'无效的数据包长度: {packet_size}', p0=packet_size))
                     break
                     
                 # 提取完整数据包
@@ -272,7 +275,7 @@ class PacketCapture:
                 self._analyze_payload(packet, "TCP")
                 
             except Exception as e:
-                logger.debug(f"处理完整数据包失败: {e}")
+                logger.debug(t(self.lang, 'Frame processing failed: {p0}', zh=f'处理完整数据包失败: {e}', p0=e))
                 break
             
     def _analyze_payload(self, payload: bytes, protocol: str):
@@ -285,13 +288,13 @@ class PacketCapture:
             parsed_data = self._parse_sync_container_data(payload)
             if parsed_data:
                 self.sync_container_count += 1
-                logger.debug(f"发现SyncContainerData数据包 #{self.sync_container_count}")
+                logger.debug(t(self.lang, 'Found SyncContainerData packet #{p0}', zh=f'发现SyncContainerData数据包 #{self.sync_container_count}', p0=self.sync_container_count))
                 
                 if self.callback:
                     self.callback(parsed_data)
                     
         except Exception as e:
-            logger.debug(f"解析数据包失败: {e}")
+            logger.debug(t(self.lang, 'Packet parsing failed: {p0}', zh=f'解析数据包失败: {e}', p0=e))
             
     def _parse_sync_container_data(self, payload: bytes) -> Optional[Dict[str, Any]]:
         """
@@ -311,7 +314,7 @@ class PacketCapture:
             while packets_reader.remaining() > 0:
                 packet_size = packets_reader.peekUInt32()
                 if packet_size < 6:
-                    logger.debug("收到无效数据包")
+                    logger.debug(t(self.lang, 'Invalid packet received', zh='收到无效数据包'))
                     return None
                     
                 # 读取完整数据包
@@ -337,7 +340,7 @@ class PacketCapture:
                         return result
                         
         except Exception as e:
-            logger.debug(f"解析SyncContainerData失败: {e}")
+            logger.debug(t(self.lang, 'SyncContainerData parsing failed: {p0}', zh=f'解析SyncContainerData失败: {e}', p0=e))
             
         return None
         
@@ -352,10 +355,10 @@ class PacketCapture:
             # 检查serviceUuid是否为游戏服务器标识
             GAME_SERVICE_UUID = 0x0000000063335342
             if service_uuid != GAME_SERVICE_UUID:
-                logger.debug(f"跳过serviceId为 {service_uuid} 的NotifyMsg")
+                logger.debug(t(self.lang, 'Skipping NotifyMsg with serviceId {p0}', zh=f'跳过serviceId为 {service_uuid} 的NotifyMsg', p0=service_uuid))
                 return None
                 
-            logger.debug(f"methodId={method_id} isZstdCompressed={is_zstd_compressed}")
+            logger.debug(t(self.lang, 'methodId={p0} isZstdCompressed={p1}', zh=None, p0=method_id, p1=is_zstd_compressed))
             
             # 读取剩余数据
             msg_payload = reader.readRemaining()
@@ -365,9 +368,9 @@ class PacketCapture:
                 try:
                     dctx = zstd.ZstdDecompressor()
                     msg_payload = dctx.decompress(msg_payload, max_output_size=1024*1024)
-                    logger.debug(f"Notify解压缩成功, 解压缩后数据长度: {len(msg_payload)}")
+                    logger.debug(t(self.lang, 'Notify decompressed, size: {p0}', zh=f'Notify解压缩成功, 解压缩后数据长度: {len(msg_payload)}', p0=len(msg_payload)))
                 except Exception as e:
-                    logger.debug(f"Notify zstd解压缩失败: {e}")
+                    logger.debug(t(self.lang, 'Notify zstd decompression failed: {p0}', zh=f'Notify zstd解压缩失败: {e}', p0=e))
                     
             # 根据methodId处理
             SYNC_CONTAINER_DATA_METHOD = 0x00000015
@@ -377,8 +380,8 @@ class PacketCapture:
             SyncToMeDeltaInfo = 0x0000002e
             
             if method_id == SYNC_CONTAINER_DATA_METHOD:
-                logger.debug('SyncContainerData数据包')
-                logger.debug(f"发现SyncContainerData数据包 (serviceUuid: 0x{service_uuid:016x}, methodId: 0x{method_id:08x})")
+                logger.debug(t(self.lang, 'SyncContainerData packet', zh='SyncContainerData数据包'))
+                logger.debug(t(self.lang, 'Found SyncContainerData packet (serviceUuid: 0x{p0:016x}, methodId: 0x{p1:08x})', zh=f'发现SyncContainerData数据包 (serviceUuid: 0x{service_uuid:016x}, methodId: 0x{method_id:08x})', p0=service_uuid, p1=method_id))
                 
                 # 解析protobuf数据
                 sync_data = SyncContainerData()
@@ -390,18 +393,18 @@ class PacketCapture:
 
 
             elif method_id == SyncNearEntities:
-                logger.debug("发现SyncNearEntities数据包")
+                logger.debug(t(self.lang, 'Found SyncNearEntities packet', zh='发现SyncNearEntities数据包'))
             elif method_id == SyncContainerDirtyData:
-                logger.debug("发现SyncContainerDirtyData数据包")
+                logger.debug(t(self.lang, 'Found SyncContainerDirtyData packet', zh='发现SyncContainerDirtyData数据包'))
             elif method_id == SyncNearDeltaInfo:
-                logger.debug("发现SyncNearDeltaInfo数据包")
+                logger.debug(t(self.lang, 'Found SyncNearDeltaInfo packet', zh='发现SyncNearDeltaInfo数据包'))
             elif method_id == SyncToMeDeltaInfo:
-                logger.debug("发现SyncToMeDeltaInfo数据包")
+                logger.debug(t(self.lang, 'Found SyncToMeDeltaInfo packet', zh='发现SyncToMeDeltaInfo数据包'))
             else:
-                logger.debug(f"跳过methodId为 {method_id} 的NotifyMsg")
+                logger.debug(t(self.lang, 'Skipping NotifyMsg with methodId {p0}', zh=f'跳过methodId为 {method_id} 的NotifyMsg', p0=method_id))
                 
         except Exception as e:
-            logger.debug(f"处理Notify消息失败: {e}")
+            logger.debug(t(self.lang, 'Notify processing failed: {p0}', zh=f'处理Notify消息失败: {e}', p0=e))
             
         return None
         
@@ -422,18 +425,18 @@ class PacketCapture:
                 try:
                     dctx = zstd.ZstdDecompressor()
                     nested_packet = dctx.decompress(nested_packet, max_output_size=1024*1024)
-                    logger.debug(f"FrameDown解压缩成功, 解压缩后数据长度: {len(nested_packet)}")
+                    logger.debug(t(self.lang, 'FrameDown decompressed, size: {p0}', zh=f'FrameDown解压缩成功, 解压缩后数据长度: {len(nested_packet)}', p0=len(nested_packet)))
                 except Exception as e:
-                    logger.debug(f"FrameDown zstd解压缩失败: {e}")
+                    logger.debug(t(self.lang, 'FrameDown zstd decompression failed: {p0}', zh=f'FrameDown zstd解压缩失败: {e}', p0=e))
                     # 继续处理原始数据
                     
-            logger.debug(f"处理FrameDown嵌套数据包, 服务器序列号: {server_sequence_id}")
+            logger.debug(t(self.lang, 'Processing nested FrameDown, server sequence: {p0}', zh=f'处理FrameDown嵌套数据包, 服务器序列号: {server_sequence_id}', p0=server_sequence_id))
             
             # 递归处理嵌套数据包
             return self._parse_sync_container_data(nested_packet)
             
         except Exception as e:
-            logger.debug(f"处理FrameDown消息失败: {e}")
+            logger.debug(t(self.lang, 'FrameDown processing failed: {p0}', zh=f'处理FrameDown消息失败: {e}', p0=e))
             
         return None
 
@@ -444,7 +447,7 @@ class PacketCapture:
                 time.sleep(10)  # 每10秒清理一次
                 self._cleanup_expired_cache()
             except Exception as e:
-                logger.debug(f"清理缓存时发生错误: {e}")
+                logger.debug(t(self.lang, 'Cache cleanup failed: {p0}', zh=f'清理缓存时发生错误: {e}', p0=e))
                 
     def _cleanup_expired_cache(self):
         """清理过期的缓存"""
@@ -463,10 +466,10 @@ class PacketCapture:
                 del self.tcp_cache[seq]
                 
             if expired_seqs:
-                logger.debug(f"清理了 {len(expired_seqs)} 个过期的TCP缓存项")
+                logger.debug(t(self.lang, 'Removed {p0} expired TCP cache entries', zh=f'清理了 {len(expired_seqs)} 个过期的TCP缓存项', p0=len(expired_seqs)))
                 
             # 检查连接超时
             if self.tcp_last_time and current_time - self.tcp_last_time > FRAGMENT_TIMEOUT:
-                logger.warning('无法捕获下一个数据包! 游戏是否已关闭或断开连接?seq: ' + str(self.tcp_next_seq))
+                logger.warning(t(self.lang, 'No next packet; game closed or disconnected? seq: {p0}', zh='无法捕获下一个数据包! 游戏是否已关闭或断开连接?seq: ' + str(self.tcp_next_seq), p0=self.tcp_next_seq))
                 self.current_server = ''
                 self._clear_tcp_cache()
