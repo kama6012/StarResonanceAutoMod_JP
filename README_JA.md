@@ -13,7 +13,7 @@
 
 参照: [モジュール解析の更新コミット](https://github.com/fudiyangjin/resonance-logs-cn/commit/c7a1b73649c3fda73f10d3fdd946027f5d548050)。2026-11-02 の参照リポジトリ HEAD でも同じ解析方式を確認しました。日本を含む各地域の実際の通信での動作は未確認です。
 
-日本語の属性名・モジュール名は説明用の訳語です。公式のゲーム内表記との一致は確認していません。C++ / GPU ライブラリ内部の診断や OS のメッセージは英語の場合があります。
+日本語のモジュール名とパワーコア名は、[スタレゾ Wiki「モジュール」](https://bpsr-wiki.regnas.blue/wiki/戦闘系育成要素/モジュール?oldid=8447)の表記を参照しています。例えば「基本 攻撃型 モジュール」「卓越 防御型 モジュール」「特攻ダメージ強化」「集中・会心」です。Wiki には数値 ID がないため、既存の属性 ID と効果・意味を対応させています。Wiki に記載のない `5500104` / `5500204` / `5500304` の「（優選）」は暫定表記です。従来の日本語属性名（例: `会心集中`）とカテゴリ名 `守護` も入力時の別名として利用できます。C++ / GPU ライブラリ内部の診断や OS のメッセージは英語の場合があります。
 
 ## ソースから実行する
 
@@ -48,13 +48,13 @@ python star_railway_monitor.py --lang ja --list
 python star_railway_monitor.py --lang ja -a
 
 # 攻撃モジュールから、指定した属性を持つものを選別
-python star_railway_monitor.py --lang ja -a -c 攻撃 -attr 筋力強化 会心集中
+python star_railway_monitor.py --lang ja -a -c 攻撃 -attr 筋力強化 集中・会心
 
-# 組み合わせ全体の会心集中を 8 以上にする
-python star_railway_monitor.py --lang ja -a -mas 会心集中 8
+# 組み合わせ全体の集中・会心を 8 以上にする
+python star_railway_monitor.py --lang ja -a -mas 集中・会心 8
 
 # 回復系属性をスコア計算から除外（モジュール自体を除外する指定ではありません）
-python star_railway_monitor.py --lang ja -a -exattr 特殊攻撃回復強化 熟練回復強化
+python star_railway_monitor.py --lang ja -a -exattr 特攻回復強化 マスタリー回復強化
 
 # プログラムと同じフォルダーの modules.vdata を使って再計算
 python star_railway_monitor.py --lang ja --load-vdata -cs 5
@@ -64,7 +64,7 @@ python star_railway_monitor.py --lang ja --load-vdata -cs 5
 
 言語指定を省略すると英語になります。英語・日本語・中国語の入力は表示言語にかかわらず利用できます。空白を含む英語名は `-attr "Strength Boost" "Crit Focus"` のように引用符で囲みます。
 
-カテゴリは `攻撃` / `守護` / `支援` / `すべて`（英語: `attack` / `guardian` / `support` / `all`）です。
+カテゴリは `攻撃` / `防御` / `支援` / `すべて`（英語: `attack` / `guardian` / `support` / `all`）です。
 
 ## 日本語の属性名
 
@@ -73,23 +73,23 @@ python star_railway_monitor.py --lang ja --load-vdata -cs 5
 | 1110 | 筋力強化 | Strength Boost |
 | 1111 | 敏捷強化 | Agility Boost |
 | 1112 | 知力強化 | Intellect Boost |
-| 1113 | 特殊攻撃 | Special Attack |
-| 1114 | エリート打撃 | Elite Strike |
-| 1205 | 特殊攻撃回復強化 | Healing Boost |
-| 1206 | 熟練回復強化 | Healing Enhance |
-| 1407 | 詠唱集中 | Cast Focus |
-| 1408 | 攻撃速度集中 | Attack SPD |
-| 1409 | 会心集中 | Crit Focus |
-| 1410 | 幸運集中 | Luck Focus |
+| 1113 | 特攻ダメージ強化 | Special Attack |
+| 1114 | 精鋭打撃 | Elite Strike |
+| 1205 | 特攻回復強化 | Healing Boost |
+| 1206 | マスタリー回復強化 | Healing Enhance |
+| 1407 | 集中・詠唱 | Cast Focus |
+| 1408 | 集中・攻撃速度 | Attack SPD |
+| 1409 | 集中・会心 | Crit Focus |
+| 1410 | 集中・幸運 | Luck Focus |
 | 1307 | 魔法耐性 | Resistance |
 | 1308 | 物理耐性 | Armor |
-| 2104 | 極・ダメージ蓄積 | DMG Stack |
-| 2105 | 極・機敏な身のこなし | Agile |
-| 2204 | 極・生命凝縮 | Life Condense |
+| 2104 | 極・ダメージ増強 | DMG Stack |
+| 2105 | 極・適応力 | Agile |
+| 2204 | 極・HP凝縮 | Life Condense |
 | 2205 | 極・応急処置 | First Aid |
-| 2404 | 極・生命波動 | Life Wave |
-| 2405 | 極・生命吸収 | Life Steal |
-| 2406 | 極・チーム幸運会心 | Team Luck&Crit |
+| 2404 | 極・HP変動 | Life Wave |
+| 2405 | 極・HP吸収 | Life Steal |
+| 2406 | 極・幸運会心 | Team Luck&Crit |
 | 2304 | 極・絶境守護 | Final Protection |
 
 ## 検証

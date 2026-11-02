@@ -30,7 +30,7 @@ class LanguageTests(unittest.TestCase):
         self.assertEqual(ModuleParser().lang, 'en')
         self.assertEqual(PacketCapture().lang, 'en')
         self.assertEqual(normalize_language(None), 'en')
-        args = parse_args(['--lang', 'JA', '-c', '攻撃', '-attr', '会心集中', '-mas', '幸運集中', '8'])
+        args = parse_args(['--lang', 'JA', '-c', '攻撃', '-attr', '集中・会心', '-mas', '集中・幸運', '8'])
         self.assertEqual(args.lang, 'ja')
         self.assertEqual(normalize_category(args.category), '攻击')
         self.assertEqual(normalize_attribute_name(args.attributes[0]), '暴击专注')
@@ -54,7 +54,7 @@ class LanguageTests(unittest.TestCase):
             self.assertEqual(display_attr(cn, 'ja'), MODULE_ATTR_NAMES_JA[attr_id])
         for config, name in MODULE_NAMES_JA.items():
             self.assertEqual(display_module(config, lang='ja'), name)
-        for ja, cn in [('攻撃','攻击'), ('守護','守护'), ('支援','辅助'), ('すべて','全部')]:
+        for ja, cn in [('攻撃','攻击'), ('防御','守护'), ('支援','辅助'), ('すべて','全部')]:
             self.assertEqual(normalize_category(ja), cn)
             self.assertEqual(display_category(cn,'ja'), ja)
 
@@ -62,6 +62,22 @@ class LanguageTests(unittest.TestCase):
         self.assertEqual(t('ja', 'Saved module data to: {p0}', p0='{private}/file'), 'モジュールデータを保存しました: {private}/file')
         self.assertEqual(t('zh', 'Score: {p0:.2f}', zh='战斗力: 1.00', p0=1), '战斗力: 1.00')
         self.assertEqual(t('en', 'Score: {p0:.2f}', p0=1), 'Score: 1.00')
+
+    def test_wiki_names_and_previous_japanese_input_aliases(self):
+        self.assertEqual(display_module(5500101, lang='ja'), '基本 攻撃型 モジュール')
+        self.assertEqual(display_module(5500303, lang='ja'), '卓越 防御型 モジュール')
+        for current, previous, canonical in (
+            ('特攻ダメージ強化', '特殊攻撃', '特攻伤害'),
+            ('精鋭打撃', 'エリート打撃', '精英打击'),
+            ('集中・会心', '会心集中', '暴击专注'),
+            ('極・適応力', '極・機敏な身のこなし', '极-灵活身法'),
+            ('極・幸運会心', '極・チーム幸運会心', '极-全队幸暴'),
+        ):
+            self.assertEqual(normalize_attribute_name(current), canonical)
+            self.assertEqual(normalize_attribute_name(previous), canonical)
+            self.assertEqual(display_attr(canonical, 'ja'), current)
+        for name in ('防御', '防御型', '守護'):
+            self.assertEqual(normalize_category(name), '守护')
 
     def test_catalog_covers_every_template_and_preserves_placeholders(self):
         catalog = json.loads((ROOT / 'locales/ja.json').read_text(encoding='utf-8'))
@@ -112,7 +128,7 @@ class LanguageTests(unittest.TestCase):
         with contextlib.redirect_stdout(output):
             engine.print_solution_details(solution, 1)
         self.assertIn('第 1 位', output.getvalue())
-        self.assertIn('卓越攻撃モジュール', output.getvalue())
+        self.assertIn('卓越 攻撃型 モジュール', output.getvalue())
         self.assertIn('筋力強化+8', output.getvalue())
         self.assertIn('スコア: 123.50', output.getvalue())
         self.assertEqual('\n'.join(c.args[0] for c in engine._log_result.call_args_list)+'\n', output.getvalue())

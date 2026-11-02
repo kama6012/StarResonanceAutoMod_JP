@@ -174,23 +174,62 @@ CATEGORY_CN_TO_EN: Dict[str, str] = {
 ATTR_CN_TO_EN: Dict[str, str] = {cn: MODULE_ATTR_NAMES_EN[attr_id] for attr_id, cn in MODULE_ATTR_NAMES.items()}
 ATTR_EN_TO_CN: Dict[str, str] = {v.lower(): k for k, v in ATTR_CN_TO_EN.items()}
 
-# Japanese display names; canonical Chinese keys stay stable for the native optimizer.
-MODULE_ATTR_NAMES_JA = dict(zip(MODULE_ATTR_NAMES, (
-    '筋力強化', '敏捷強化', '知力強化', '特殊攻撃', 'エリート打撃',
-    '特殊攻撃回復強化', '熟練回復強化', '詠唱集中', '攻撃速度集中',
-    '会心集中', '幸運集中', '魔法耐性', '物理耐性', '極・ダメージ蓄積',
-    '極・機敏な身のこなし', '極・生命凝縮', '極・応急処置', '極・生命波動',
-    '極・生命吸収', '極・チーム幸運会心', '極・絶境守護',
-)))
-MODULE_NAMES_JA = dict(zip(MODULE_NAMES, (
-    '基礎攻撃モジュール', '高性能攻撃モジュール', '卓越攻撃モジュール', '卓越攻撃モジュール・特選',
-    '基礎支援モジュール', '高性能支援モジュール', '卓越支援モジュール', '卓越支援モジュール・特選',
-    '基礎守護モジュール', '高性能守護モジュール', '卓越守護モジュール', '卓越守護モジュール・特選',
-)))
-CATEGORY_CN_TO_JA = dict(zip(CATEGORY_CN_TO_EN, ('攻撃', '守護', '支援', 'すべて')))
+# Japanese terminology follows the module names and power cores on:
+# https://bpsr-wiki.regnas.blue/wiki/戦闘系育成要素/モジュール (revision 8447).
+# Canonical Chinese keys stay stable for the native optimizer.
+MODULE_ATTR_NAMES_JA = {
+    1110: '筋力強化',
+    1111: '敏捷強化',
+    1112: '知力強化',
+    1113: '特攻ダメージ強化',
+    1114: '精鋭打撃',
+    1205: '特攻回復強化',
+    1206: 'マスタリー回復強化',
+    1407: '集中・詠唱',
+    1408: '集中・攻撃速度',
+    1409: '集中・会心',
+    1410: '集中・幸運',
+    1307: '魔法耐性',
+    1308: '物理耐性',
+    2104: '極・ダメージ増強',
+    2105: '極・適応力',
+    2204: '極・HP凝縮',
+    2205: '極・応急処置',
+    2404: '極・HP変動',
+    2405: '極・HP吸収',
+    2406: '極・幸運会心',
+    2304: '極・絶境守護',
+}
+MODULE_NAMES_JA = {
+    5500101: '基本 攻撃型 モジュール',
+    5500102: '高性能 攻撃型 モジュール',
+    5500103: '卓越 攻撃型 モジュール',
+    # Preferred variants are not listed on the Wiki; 優選 is provisional.
+    5500104: '卓越 攻撃型 モジュール（優選）',
+    5500201: '基本 支援型 モジュール',
+    5500202: '高性能 支援型 モジュール',
+    5500203: '卓越 支援型 モジュール',
+    5500204: '卓越 支援型 モジュール（優選）',
+    5500301: '基本 防御型 モジュール',
+    5500302: '高性能 防御型 モジュール',
+    5500303: '卓越 防御型 モジュール',
+    5500304: '卓越 防御型 モジュール（優選）',
+}
+CATEGORY_CN_TO_JA = dict(zip(CATEGORY_CN_TO_EN, ('攻撃', '防御', '支援', 'すべて')))
 CATEGORY_JA_TO_CN = {ja: cn for cn, ja in CATEGORY_CN_TO_JA.items()}
-CATEGORY_JA_TO_CN.update({'全て': '全部', '全部': '全部', '補助': '辅助'})
+CATEGORY_JA_TO_CN.update({'全て': '全部', '全部': '全部', '補助': '辅助', '守護': '守护',
+                          '攻撃型': '攻击', '防御型': '守护', '支援型': '辅助'})
 ATTR_JA_TO_CN = {ja.lower(): MODULE_ATTR_NAMES[attr_id] for attr_id, ja in MODULE_ATTR_NAMES_JA.items()}
+# Retain names accepted by the first Japanese release for saved commands.
+ATTR_JA_ALIASES = {
+    '特殊攻撃': 1113, 'エリート打撃': 1114,
+    '特殊攻撃回復強化': 1205, '熟練回復強化': 1206,
+    '詠唱集中': 1407, '攻撃速度集中': 1408, '会心集中': 1409, '幸運集中': 1410,
+    '極・ダメージ蓄積': 2104, '極・機敏な身のこなし': 2105,
+    '極・生命凝縮': 2204, '極・生命波動': 2404,
+    '極・生命吸収': 2405, '極・チーム幸運会心': 2406,
+}
+ATTR_JA_TO_CN.update({alias.lower(): MODULE_ATTR_NAMES[attr_id] for alias, attr_id in ATTR_JA_ALIASES.items()})
 
 
 def display_attr(name: str, lang: str = 'en') -> str:

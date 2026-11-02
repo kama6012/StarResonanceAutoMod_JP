@@ -124,7 +124,7 @@
   "Enable debug logging": "デバッグログを有効にする",
   "Auto-detect the default network interface": "既定のネットワークインターフェースを自動検出する",
   "List network interfaces": "ネットワークインターフェースを一覧表示する",
-  "Module category: attack/guardian/support/all (also accepts Japanese and Chinese)": "モジュールの種類: 攻撃/守護/支援/すべて（英語・中国語でも指定可能）",
+  "Module category: attack/guardian/support/all (also accepts Japanese and Chinese)": "モジュールの種類: 攻撃/防御/支援/すべて（英語・中国語でも指定可能）",
   "Target attributes (quote names containing spaces)": "対象の属性（空白を含む名前は引用符で囲む）",
   "Attributes excluded from scoring": "スコア計算から除外する属性",
   "Minimum matching attributes per module (default: 1)": "各モジュールに必要な一致属性数（既定: 1）",
