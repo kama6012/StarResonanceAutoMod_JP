@@ -4,28 +4,35 @@
 
 ブループロトコル：スターレゾナンスのモジュール情報をパケットから取得し、属性の条件に合う組み合わせを計算します。
 
-## このフォークの変更
+## 主な機能
 
-- 新形式の `Item.ModPartLevel.Levels` を属性 ID で読み込みます。新形式のマップが空、または存在しない場合は、旧形式の `Mod.ModInfos.InitLinkNums` を使います。
-- 通常アイテムが同じバッグに含まれる場合や、旧形式の付加情報がない場合にも対応しました。値のない属性・モジュールはスキップします。
-- 表示言語の既定値を英語に変更しました。
-- `--lang ja` でヘルプ、操作案内、結果、Python のログを日本語にできます。カテゴリ名・属性名も日本語で指定できます。`--lang zh` で中国語も利用できます。
+- パケットからモジュール情報を取得
+- C++ による組み合わせ最適化（CPU / CUDA）
+- カテゴリ、対象属性、属性値の合計による絞り込み
+- 英語・日本語・中国語での表示と入力
 
-参照: [モジュール解析の更新コミット](https://github.com/fudiyangjin/resonance-logs-cn/commit/c7a1b73649c3fda73f10d3fdd946027f5d548050)。2026-11-02 の参照リポジトリ HEAD でも同じ解析方式を確認しました。日本を含む各地域の実際の通信での動作は未確認です。
+## exe から実行する
 
-日本語のモジュール名とパワーコア名は、[スタレゾ Wiki「モジュール」](https://bpsr-wiki.regnas.blue/wiki/戦闘系育成要素/モジュール?oldid=8447)の表記を参照しています。例えば「基本 攻撃型 モジュール」「卓越 防御型 モジュール」「特攻ダメージ強化」「集中・会心」です。Wiki には数値 ID がないため、既存の属性 ID と効果・意味を対応させています。精選系はユーザー確認に基づき「EXC攻撃型モジュール・精選」「EXC支援型モジュール・精選」「EXC防御型モジュール・精選」としています。従来の日本語属性名（例: `会心集中`）とカテゴリ名 `守護` も入力時の別名として利用できます。C++ / GPU ライブラリ内部の診断や OS のメッセージは英語の場合があります。
+1. [リリースページ](https://github.com/kama6012/StarResonanceAutoMod_JP/releases)から ZIP をダウンロードして展開します。
+2. CPU 版または CUDA 版のフォルダーを開き、ターミナルから実行します。
+
+```powershell
+.\StarResonanceAutoMod.exe --lang ja -a
+```
+
+Windows 10/11 x64、AVX2 対応 CPU、キャプチャ用の Npcap が必要です。
+CUDA 版は対応 NVIDIA GPU を利用し、利用できない場合は CPU に切り替わります。
+変更履歴は[リリースノート](https://github.com/kama6012/StarResonanceAutoMod_JP/releases)を参照してください。
 
 ## ソースから実行する
-
-既存の上流リリースの exe には、このフォークの変更は含まれていません。
 
 Windows 10/11、Python 3.10 以上、Git、Visual Studio Build Tools（C++ デスクトップ開発と Windows SDK）が必要です。パケットの取得には Npcap も必要です。オフライン計算ではパケットを取得しません。
 
 PowerShell で実行します。
 
 ```powershell
-git clone https://github.com/kama6012/StarResonanceAutoMod.git
-cd StarResonanceAutoMod
+git clone https://github.com/kama6012/StarResonanceAutoMod_JP.git
+cd StarResonanceAutoMod_JP
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt

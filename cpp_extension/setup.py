@@ -69,7 +69,7 @@ def find_cuda():
                     cuda_home = path
                     break
             
-            if os.path.exists(cuda_home):
+            if cuda_home and os.path.exists(cuda_home):
                 print(f"✅ CUDA路径: {cuda_home}")
                 return cuda_home
             else:
@@ -89,6 +89,14 @@ def compile_cuda_code(cuda_home):
             r"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat",
             r"C:\Program Files\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
         ]
+        # Hosted Windows runners use Enterprise/Build Tools installations.
+        vswhere = Path(os.environ.get('ProgramFiles(x86)', r'C:\Program Files (x86)')) / 'Microsoft Visual Studio/Installer/vswhere.exe'
+        if vswhere.exists():
+            result = subprocess.run([str(vswhere), '-latest', '-products', '*',
+                                     '-requires', 'Microsoft.VisualStudio.Component.VC.Tools.x86.x64',
+                                     '-property', 'installationPath'], capture_output=True, text=True, check=True)
+            if result.stdout.strip():
+                vs_vars_paths.insert(0, str(Path(result.stdout.strip()) / 'VC/Auxiliary/Build/vcvars64.bat'))
         
         vs_vars = None
         for path in vs_vars_paths:
@@ -169,10 +177,6 @@ else:
     extra_compile_args = ["-O3", "-march=native", "-std=c++17"]
     extra_link_args = []
 
-# 预先添加CUDA宏
-if use_cuda:
-    extra_compile_args.append("/DUSE_CUDA" if is_windows else "-DUSE_CUDA")
-
 # 源文件列表
 source_files = [
     "src/pybind11_wrapper.cpp",
@@ -190,6 +194,7 @@ if use_cuda:
     
     # 编译CUDA代码
     if compile_cuda_code(cuda_home):
+        extra_compile_args.append("/DUSE_CUDA" if is_windows else "-DUSE_CUDA")
         # 添加CUDA相关配置
         include_dirs.extend([
             *(str(include_dir) for include_dir in get_vendored_cccl_include_dirs() if include_dir.exists()),
@@ -207,6 +212,8 @@ if use_cuda:
         
         print("✅ CUDA配置完成")
     else:
+        if force_cuda:
+            raise RuntimeError('FORCE_CUDA build failed; refusing to publish a CPU fallback as CUDA')
         print("⚠️ CUDA编译失败, 回退到CPU版本")
         use_cuda = False
 else:

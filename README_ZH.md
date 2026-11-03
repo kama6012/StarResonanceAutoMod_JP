@@ -1,7 +1,3 @@
-[English](README.md) | [日本語](README_JA.md)
-
-本分支默认使用英语；中文请指定 `--lang zh`。新旧模组数据均可读取。
-
 # 星痕共鸣模组全自动筛选工具
 
 [English Version](README_EN.md)
@@ -44,9 +40,9 @@
 
 **下载步骤：**
 
-1. 从 [Release 页面](https://github.com/fudiyangjin/StarResonanceAutoMod/releases) 下载对应版本：
-   - `StarResonanceAutoMod_CPU.exe` - CPU 版本
-   - `StarResonanceAutoMod_CUDA.exe` - GPU 版本
+1. 从 [Release 页面](https://github.com/kama6012/StarResonanceAutoMod_JP/releases) 下载对应版本：
+   - `StarResonanceAutoMod_Release_CPU/StarResonanceAutoMod.exe` - CPU 版本
+   - `StarResonanceAutoMod_Release_CUDA/StarResonanceAutoMod.exe` - GPU 版本
 2. 将文件放置在任意文件夹中
 
 #### 🚀 快速开始
@@ -232,8 +228,8 @@
 **1. 克隆项目**
 
 ```bash
-git clone https://github.com/fudiyangjin/StarResonanceAutoMod.git
-cd StarResonanceAutoMod
+git clone https://github.com/kama6012/StarResonanceAutoMod_JP.git
+cd StarResonanceAutoMod_JP
 ```
 
 **2. 安装依赖**

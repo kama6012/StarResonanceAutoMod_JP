@@ -5,28 +5,6 @@
 An intelligent module filtering tool for the game “Star Resonance”. It captures module data via network packets and computes optimal combinations using multi-strategy algorithms with a C++ core. English is the default output language. Japanese (`--lang ja`) and Chinese (`--lang zh`) are also supported, including attribute/category inputs.
 
 
-## Fork changes
-
-- Reads current module values from `Item.ModPartLevel.Levels` (field 21), keyed by attribute ID. Absent/empty maps fall back to legacy `Mod.ModInfos.InitLinkNums`.
-- Skips unrelated inventory items and modules without usable values, and tolerates missing legacy metadata.
-- Defaults to English across CLI help, prompts and logs; adds Japanese names, inputs and output. Internal optimizer keys remain unchanged.
-- Japanese module and power-core names follow the [Japanese Wiki](https://bpsr-wiki.regnas.blue/wiki/戦闘系育成要素/モジュール?oldid=8447). Numeric IDs are matched by their existing meaning/effect; preferred variants use the user-confirmed EXC names (for example, EXC攻撃型モジュール・精選). Japanese attribute inputs accept omitted middle dots and, for extreme cores, an omitted 極・ prefix. Earlier Japanese attribute/category inputs remain accepted as aliases. This schema update follows the referenced CN project; live packets from every regional server have not been verified.
-
-Protocol reference: [upstream module update](https://github.com/fudiyangjin/resonance-logs-cn/commit/c7a1b73649c3fda73f10d3fdd946027f5d548050). Regeneration instructions are in [protocol/README.md](protocol/README.md).
-
-These changes are in source. The upstream release executables linked below do **not** contain this fork's changes. Build from source to use them.
-
-```sh
-python star_railway_monitor.py --help
-python star_railway_monitor.py --lang ja --help
-python star_railway_monitor.py -a --lang ja -c 攻撃 -attr 筋力強化 集中・会心 -mas 集中・会心 8
-python star_railway_monitor.py --load-vdata --lang ja
-```
-
-When packaging with PyInstaller, include the Japanese catalog: `--add-data "locales/ja.json;locales"` on Windows (`:` instead of `;` on Linux/macOS). Keep the existing C++ extension and packet-capture dependencies in the build.
-
-Run regression tests with `python -m unittest discover -s tests -v`. Building the C++ extension enables the native integration test. CI builds the CPU extension on Windows and Linux before running tests.
-
 ## 🌟 Core Features
 
 - Real-time module capture via packet sniffing
@@ -59,9 +37,9 @@ GPU-specific:
 
 #### 🔽 Get the Tool
 
-1. Download from the [Release page](https://github.com/fudiyangjin/StarResonanceAutoMod/releases):
-   - `StarResonanceAutoMod_CPU.exe` – CPU version
-   - `StarResonanceAutoMod_CUDA.exe` – GPU version
+1. Download from the [Release page](https://github.com/kama6012/StarResonanceAutoMod_JP/releases):
+   - `StarResonanceAutoMod_Release_CPU/StarResonanceAutoMod.exe` – CPU version
+   - `StarResonanceAutoMod_Release_CUDA/StarResonanceAutoMod.exe` – GPU version
 2. Place the file in any directory
 
 #### 🚀 Quick Start
@@ -244,8 +222,8 @@ GPU-specific:
 1) Clone the project
 
 ```bash
-git clone https://github.com/kama6012/StarResonanceAutoMod.git
-cd StarResonanceAutoMod
+git clone https://github.com/kama6012/StarResonanceAutoMod_JP.git
+cd StarResonanceAutoMod_JP
 ```
 
 2) Install dependencies
