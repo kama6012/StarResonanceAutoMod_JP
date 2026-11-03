@@ -204,16 +204,16 @@ MODULE_NAMES_JA = {
     5500101: '基本 攻撃型 モジュール',
     5500102: '高性能 攻撃型 モジュール',
     5500103: '卓越 攻撃型 モジュール',
-    # Preferred variants are not listed on the Wiki; 優選 is provisional.
-    5500104: '卓越 攻撃型 モジュール（優選）',
+    # Preferred-variant names supplied by the user from the Japanese client.
+    5500104: 'EXC攻撃型モジュール・精選',
     5500201: '基本 支援型 モジュール',
     5500202: '高性能 支援型 モジュール',
     5500203: '卓越 支援型 モジュール',
-    5500204: '卓越 支援型 モジュール（優選）',
+    5500204: 'EXC支援型モジュール・精選',
     5500301: '基本 防御型 モジュール',
     5500302: '高性能 防御型 モジュール',
     5500303: '卓越 防御型 モジュール',
-    5500304: '卓越 防御型 モジュール（優選）',
+    5500304: 'EXC防御型モジュール・精選',
 }
 CATEGORY_CN_TO_JA = dict(zip(CATEGORY_CN_TO_EN, ('攻撃', '防御', '支援', 'すべて')))
 CATEGORY_JA_TO_CN = {ja: cn for cn, ja in CATEGORY_CN_TO_JA.items()}
@@ -230,6 +230,15 @@ ATTR_JA_ALIASES = {
     '極・生命吸収': 2405, '極・チーム幸運会心': 2406,
 }
 ATTR_JA_TO_CN.update({alias.lower(): MODULE_ATTR_NAMES[attr_id] for alias, attr_id in ATTR_JA_ALIASES.items()})
+
+# Match Japanese inputs without middle dots; extreme cores also accept the
+# name without the 極 prefix. Only known names gain these aliases.
+ATTR_JA_INPUT_TO_CN = {}
+for label, canonical in ATTR_JA_TO_CN.items():
+    key = label.replace('・', '')
+    ATTR_JA_INPUT_TO_CN[key] = canonical
+    if label.startswith('極・'):
+        ATTR_JA_INPUT_TO_CN[key[1:]] = canonical
 
 
 def display_attr(name: str, lang: str = 'en') -> str:
@@ -254,13 +263,13 @@ def display_category(category: str, lang: str = 'en') -> str:
     return names.get(lang, {}).get(category, category)
 
 def normalize_attribute_name(name: str) -> str:
-    """将英文/中文属性名归一化为中文；未知则原样返回"""
+    """Normalize Japanese/English/Chinese inputs to stable optimizer keys."""
     if not name:
         return name
     if name in MODULE_ATTR_IDS:
         return name
     key = name.strip().lower()
-    return ATTR_JA_TO_CN.get(key, ATTR_EN_TO_CN.get(key, name))
+    return ATTR_JA_INPUT_TO_CN.get(key.replace('・', ''), ATTR_EN_TO_CN.get(key, name))
 
 def normalize_attribute_list(names: List[str] | None) -> List[str] | None:
     if names is None:

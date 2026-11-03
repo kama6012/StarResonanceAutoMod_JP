@@ -10,7 +10,7 @@ An intelligent module filtering tool for the game “Star Resonance”. It captu
 - Reads current module values from `Item.ModPartLevel.Levels` (field 21), keyed by attribute ID. Absent/empty maps fall back to legacy `Mod.ModInfos.InitLinkNums`.
 - Skips unrelated inventory items and modules without usable values, and tolerates missing legacy metadata.
 - Defaults to English across CLI help, prompts and logs; adds Japanese names, inputs and output. Internal optimizer keys remain unchanged.
-- Japanese module and power-core names follow the [Japanese Wiki](https://bpsr-wiki.regnas.blue/wiki/戦闘系育成要素/モジュール?oldid=8447). Numeric IDs are matched by their existing meaning/effect; preferred variants absent from the Wiki retain a provisional suffix. Earlier Japanese attribute/category inputs remain accepted as aliases. This schema update follows the referenced CN project; live packets from every regional server have not been verified.
+- Japanese module and power-core names follow the [Japanese Wiki](https://bpsr-wiki.regnas.blue/wiki/戦闘系育成要素/モジュール?oldid=8447). Numeric IDs are matched by their existing meaning/effect; preferred variants use the user-confirmed EXC names (for example, EXC攻撃型モジュール・精選). Japanese attribute inputs accept omitted middle dots and, for extreme cores, an omitted 極・ prefix. Earlier Japanese attribute/category inputs remain accepted as aliases. This schema update follows the referenced CN project; live packets from every regional server have not been verified.
 
 Protocol reference: [upstream module update](https://github.com/fudiyangjin/resonance-logs-cn/commit/c7a1b73649c3fda73f10d3fdd946027f5d548050). Regeneration instructions are in [protocol/README.md](protocol/README.md).
 

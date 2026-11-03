@@ -63,6 +63,23 @@ class LanguageTests(unittest.TestCase):
         self.assertEqual(t('zh', 'Score: {p0:.2f}', zh='战斗力: 1.00', p0=1), '战斗力: 1.00')
         self.assertEqual(t('en', 'Score: {p0:.2f}', p0=1), 'Score: 1.00')
 
+    def test_japanese_middle_dots_and_extreme_prefix_are_optional(self):
+        for attr_id, label in MODULE_ATTR_NAMES_JA.items():
+            variants = [label, label.replace('・', '')]
+            if label.startswith('極・'):
+                variants.append(label.removeprefix('極・'))
+            for variant in variants:
+                with self.subTest(variant=variant):
+                    self.assertEqual(normalize_attribute_name(variant), MODULE_ATTR_NAMES[attr_id])
+        for variant in ('HP吸収', 'hp吸収', '極HP吸収', '極・HP吸収'):
+            self.assertEqual(normalize_attribute_name(variant), '极-生命汲取')
+        self.assertEqual(normalize_attribute_name('生命吸収'), '极-生命汲取')
+        self.assertEqual(normalize_attribute_name('極・未知の属性'), '極・未知の属性')
+
+    def test_preferred_module_names(self):
+        for config, category in ((5500104, '攻撃'), (5500204, '支援'), (5500304, '防御')):
+            self.assertEqual(display_module(config, lang='ja'), f'EXC{category}型モジュール・精選')
+
     def test_wiki_names_and_previous_japanese_input_aliases(self):
         self.assertEqual(display_module(5500101, lang='ja'), '基本 攻撃型 モジュール')
         self.assertEqual(display_module(5500303, lang='ja'), '卓越 防御型 モジュール')
